@@ -4,7 +4,7 @@ export type SFValue = any;
 
 export type SFLayout = 'horizontal' | 'vertical' | 'inline';
 
-export interface SFButton {
+export interface EtButton {
   /** 提交按钮文本，默认：`提交` */
   submit?: string;
   /** 提交按钮类型，默认：`primary` */

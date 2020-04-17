@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { SFButton } from './interface';
-import { SFUISchemaItem } from './schema/ui';
+import {EtUISchemaItem} from '../model/schema/ui.schema';
+import {EtButton} from '../model/schema/value.schema';
 
 @Injectable({ providedIn: 'root' })
-export class DelonFormConfig {
+export class EtFormConfig {
   /**
    * 是否忽略某些数据类型校验 `ERRORSDEFAULT`，默认：`[ 'type', 'enum' ]`
    *
@@ -40,7 +40,7 @@ export class DelonFormConfig {
   /**
    * 默认全局布局
    */
-  ui?: SFUISchemaItem;
+  ui?: EtUISchemaItem;
   /**
    * 元素组件大小，用于 `nzSize` 值
    */
@@ -48,7 +48,7 @@ export class DelonFormConfig {
   /**
    * 按钮风格
    */
-  button?: SFButton = {
+  button?: EtButton = {
     submit_type: 'primary',
     reset_type: 'default',
   };
