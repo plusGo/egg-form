@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import {EtUISchemaItem} from '../model/schema/ui.schema';
-import {EtButton} from '../model/schema/value.schema';
+import {EtUISchemaItem} from '../schema/ui.schema';
+import {EtButton} from '../schema/value.schema';
 
 @Injectable({ providedIn: 'root' })
 export class EtFormConfig {

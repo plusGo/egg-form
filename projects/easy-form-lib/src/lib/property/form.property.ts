@@ -1,46 +1,47 @@
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
-import { DelonFormConfig } from '../config';
-import { SF_SEQ } from '../const';
-import { ErrorData } from '../errors';
-import { SFValue } from '../interface';
-import { SFSchema, SFSchemaType } from '../schema';
-import { SFUISchema, SFUISchemaItem, SFUISchemaItemRun } from '../schema/ui';
-import { isBlank } from '../utils';
-import { SchemaValidatorFactory } from '../validator.factory';
-import { Widget } from '../widget';
+import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
+import {distinctUntilChanged, map} from 'rxjs/operators';
+
+import {EtValue} from '../schema/value.schema';
+import {ET_SEQ} from '../model/constant/constants';
+import {EtSchema, EtSchemaType} from '../schema/json.schema';
+import {ErrorData} from '../error/error';
+import {EtUISchema, EtUISchemaItem, EtUISchemaItemRun} from '../schema/ui.schema';
+import {Widget} from '../widget/base.widget';
+import {SchemaValidatorFactory} from '../model/factory/validator.factory';
+import {EtFormConfig} from '../service/config.service';
+import {isBlank} from '../util/util';
 
 export abstract class FormProperty {
   private _errors: ErrorData[] | null = null;
-  private _valueChanges = new BehaviorSubject<SFValue>(null);
+  private _valueChanges = new BehaviorSubject<EtValue>(null);
   private _errorsChanges = new BehaviorSubject<ErrorData[] | null>(null);
   private _visible = true;
   private _visibilityChanges = new BehaviorSubject<boolean>(true);
   private _root: PropertyGroup;
   private _parent: PropertyGroup | null;
   _objErrors: { [key: string]: ErrorData[] } = {};
-  schemaValidator: (value: SFValue) => ErrorData[];
-  schema: SFSchema;
-  ui: SFUISchema | SFUISchemaItemRun;
+  schemaValidator: (value: EtValue) => ErrorData[];
+  schema: EtSchema;
+  ui: EtUISchema | EtUISchemaItemRun;
   formData: {};
-  _value: SFValue = null;
-  widget: Widget<FormProperty, SFUISchemaItem>;
+  _value: EtValue = null;
+  widget: Widget<FormProperty, EtUISchemaItem>;
   path: string;
 
   constructor(
     schemaValidatorFactory: SchemaValidatorFactory,
-    schema: SFSchema,
-    ui: SFUISchema | SFUISchemaItem,
+    schema: EtSchema,
+    ui: EtUISchema | EtUISchemaItem,
     formData: {},
     parent: PropertyGroup | null,
     path: string,
-    private _options: DelonFormConfig,
+    private _options: EtFormConfig,
   ) {
     this.schema = schema;
     this.ui = ui;
     this.schemaValidator = schemaValidatorFactory.createValidatorFn(schema, {
       ingoreKeywords: this.ui.ingoreKeywords as string[],
-      debug: (ui as SFUISchemaItem)!.debug!,
+      debug: (ui as EtUISchemaItem)!.debug!,
     });
     this.formData = formData || schema.default;
     this._parent = parent;
@@ -60,7 +61,7 @@ export abstract class FormProperty {
     return this._errorsChanges;
   }
 
-  get type(): SFSchemaType {
+  get type(): EtSchemaType {
     return this.schema.type!;
   }
 
@@ -72,7 +73,7 @@ export abstract class FormProperty {
     return this._root;
   }
 
-  get value(): SFValue {
+  get value(): EtValue {
     return this._value;
   }
 
@@ -97,14 +98,14 @@ export abstract class FormProperty {
    *
    * @param onlySelf `true` 只对当前字段更新值和校验；`false` 包含上级字段
    */
-  abstract setValue(value: SFValue, onlySelf: boolean): void;
+  abstract setValue(value: EtValue, onlySelf: boolean): void;
 
   /**
    * 重置值，默认值为 `schema.default`
    *
    * @param onlySelf `true` 只对当前字段更新值和校验；`false` 包含上级字段
    */
-  abstract resetValue(value: SFValue, onlySelf: boolean): void;
+  abstract resetValue(value: EtValue, onlySelf: boolean): void;
 
   /**
    * @internal
@@ -121,6 +122,7 @@ export abstract class FormProperty {
    *
    * @param [onlySelf=false] 是否包含上级字段
    * @param [emitValueEvent=true] 是否触发值变更通知
+   * @param [emitValidator=true]  每一次数据变更已经包含完整错误链路，后续父节点数据变更无须再触发校验
    */
   updateValueAndValidity(onlySelf = false, emitValueEvent = true, emitValidator = true) {
     this._updateValue();
@@ -129,7 +131,6 @@ export abstract class FormProperty {
       this.valueChanges.next(this.value);
     }
 
-    // `emitValidator` 每一次数据变更已经包含完整错误链路，后续父节点数据变更无须再触发校验
     if (emitValidator && this.ui.liveValidate === true) {
       this._runValidation();
     }
@@ -145,7 +146,7 @@ export abstract class FormProperty {
     let base: PropertyGroup | null = null;
 
     let result = null;
-    if (path[0] === SF_SEQ) {
+    if (path[0] === ET_SEQ) {
       base = this.findRoot();
       result = base.getProperty(path.substr(1));
     } else {
@@ -169,7 +170,9 @@ export abstract class FormProperty {
   // #region process errors
 
   private isEmptyData(value: {}) {
-    if (isBlank(value)) return true;
+    if (isBlank(value)) {
+      return true;
+    }
     switch (this.type) {
       case 'string':
         return ('' + value).length === 0;
@@ -187,13 +190,13 @@ export abstract class FormProperty {
     // 2. Should not ajv validator when is empty data
     const isEmpty = this.isEmptyData(this._value);
     if (isEmpty && this.ui._required) {
-      errors = [{ keyword: 'required' }];
+      errors = [{keyword: 'required'}];
     } else if (isEmpty) {
       errors = [];
     } else {
       errors = this.schemaValidator(this._value) || [];
     }
-    const customValidator = (this.ui as SFUISchemaItemRun).validator;
+    const customValidator = (this.ui as EtUISchemaItemRun).validator;
     if (typeof customValidator === 'function') {
       const customErrors = customValidator(this.value, this, this.findRoot());
       if (customErrors instanceof Observable) {
@@ -272,7 +275,9 @@ export abstract class FormProperty {
     const platErrors: ErrorData[] = [];
     Object.keys(this._objErrors).forEach(p => {
       const property = this.searchProperty(p);
-      if (property && !property.visible) return;
+      if (property && !property.visible) {
+        return;
+      }
       platErrors.push(...this._objErrors[p]);
     });
     this.setErrors(platErrors, false);
@@ -291,7 +296,7 @@ export abstract class FormProperty {
 
   // A field is visible if AT LEAST ONE of the properties it depends on is visible AND has a value in the list
   _bindVisibility() {
-    const visibleIf = (this.ui as SFUISchemaItem).visibleIf;
+    const visibleIf = (this.ui as EtUISchemaItem).visibleIf;
     if (typeof visibleIf === 'object' && Object.keys(visibleIf).length === 0) {
       this.setVisible(false);
     } else if (visibleIf !== undefined) {
@@ -301,9 +306,11 @@ export abstract class FormProperty {
           const property = this.searchProperty(dependencyPath);
           if (property) {
             const valueCheck = property.valueChanges.pipe(
-              map((value: SFValue) => {
+              map((value: EtValue) => {
                 const vi = visibleIf[dependencyPath];
-                if (typeof vi === 'function') return vi(value);
+                if (typeof vi === 'function') {
+                  return vi(value);
+                }
                 if (vi.indexOf('$ANY$') !== -1) {
                   return value.length > 0;
                 } else {
@@ -336,7 +343,7 @@ export abstract class PropertyGroup extends FormProperty {
   properties: { [key: string]: FormProperty } | FormProperty[] | null = null;
 
   getProperty(path: string): FormProperty | undefined {
-    const subPathIdx = path.indexOf(SF_SEQ);
+    const subPathIdx = path.indexOf(ET_SEQ);
     const propertyId = subPathIdx !== -1 ? path.substr(0, subPathIdx) : path;
 
     let property = (this.properties as { [key: string]: FormProperty })[propertyId];
