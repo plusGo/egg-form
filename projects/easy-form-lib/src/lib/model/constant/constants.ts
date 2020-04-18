@@ -1,1 +1,1 @@
-export const EASY_SEQ = '/';
+export const ET_SEQ = '/';

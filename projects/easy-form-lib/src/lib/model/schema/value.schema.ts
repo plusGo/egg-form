@@ -1,8 +1,8 @@
-import { SFHorizontalLayoutSchema, SFRenderSchema } from './schema/ui';
+import {EtHorizontalLayoutSchema, EtRenderSchema} from './ui.schema';
 
-export type SFValue = any;
+export type EtValue = any;
 
-export type SFLayout = 'horizontal' | 'vertical' | 'inline';
+export type EtLayout = 'horizontal' | 'vertical' | 'inline';
 
 export interface EtButton {
   /** 提交按钮文本，默认：`提交` */
@@ -10,22 +10,22 @@ export interface EtButton {
   /** 提交按钮类型，默认：`primary` */
   submit_type?: string;
   /** 提交按钮图标 */
-  submit_icon?: SFButtonIcon;
+  submit_icon?: EtButtonIcon;
   /** 重置按钮文本，`null `或 `undefined` 表示不需要该按钮，默认：`重置` */
   reset?: string;
   /** 重置按钮类型，默认：`default` */
   reset_type?: string;
   /** 重置按钮图标 */
-  reset_icon?: SFButtonIcon;
+  reset_icon?: EtButtonIcon;
   /** 按钮样式，主要用于指定按钮 `grid`、`class` 属性 */
-  render?: SFRenderButton;
+  render?: EtButtonIcon;
   /** 搜索按钮文本，默认：`搜索` */
   search?: string;
   /** 编辑按钮文本，默认：`保存` */
   edit?: string;
 }
 
-export interface SFButtonIcon {
+export interface EtButtonIcon {
   /** 等同 `nz-icon` 的 `nzType` 值 */
   type?: string;
   /** 图标主题风格，默认：`outline` */
@@ -36,4 +36,5 @@ export interface SFButtonIcon {
   iconfont?: string;
 }
 
-export interface SFRenderButton extends SFHorizontalLayoutSchema, SFRenderSchema {}
+export interface EtRenderButton extends EtHorizontalLayoutSchema, EtRenderSchema {
+}
